@@ -122,7 +122,7 @@ export default function Component() {
         <div className="flex items-center gap-2 font-medium leading-none">
           Better up by 5.2% this month <TrendingUp className="h-4 w-4 text-green-600" />
         </div>
-        <div className="leading-none text-muted-foreground">
+        <div className="leading-none opacity-50 text-center text-muted-foreground">
           Showing your total impact for the last 3 months
         </div>
       </CardFooter>

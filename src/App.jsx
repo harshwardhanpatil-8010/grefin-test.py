@@ -91,7 +91,9 @@ function App() {
                </Card>
               </div>
 
-                <div className="grid grid-cols-2 gap-4 min-h-[70vh]" >
+
+              <div className="grid grid-cols-2 gap-4 min-h-[70vh]" >
+
                   <div className=''>
                     <Card className="h-full">
                       <CardHeader>
@@ -105,9 +107,9 @@ function App() {
                         <p>Card Footer</p>
                       </CardFooter>
                     </Card>
-                 </div>
+                  </div>
 
-                 <div className='grid gap-4'>
+                  <div className='grid gap-4'>
                   <Card>
                     <CardHeader>
                       <CardTitle>Card Title</CardTitle>
@@ -132,11 +134,16 @@ function App() {
                       <p>Card Footer</p>
                     </CardFooter>
                   </Card>
-                 </div>
+                  </div>
+
                 </div>
             </div>
+
+
             <Separator orientation="vertical" className="bg-slate-400"/>
-              <div className='bg-slate-200 grid gap-2 h-full w-1/4 p-4'>
+
+
+            <div className='bg-slate-200 grid gap-2 h-full w-1/4 p-4'>
               <div className='flex'>
                 <PieChart />
               </div>
@@ -155,6 +162,7 @@ function App() {
                 </Card>
               </div>
             </div>
+
 
           </div>
            </SidebarInset>
