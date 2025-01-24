@@ -39,7 +39,7 @@ export default function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2 mb- ">
            <img src={logo} alt="logo" className="w-9" />
-           <span className="text-xl font-bold text-gray-200 font-">GREFIN</span>
+           <span className="text-xl font-bold text-gray-200 font- cursor-pointer">GREFIN</span>
         </div>        
       </SidebarHeader>
       <SidebarContent className="p-3">
