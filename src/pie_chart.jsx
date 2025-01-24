@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { TrendingUp } from "lucide-react";
 import { Label, Pie, PieChart } from "recharts";
@@ -19,11 +20,10 @@ import {
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { Button } from "./components/ui/button";
 
-
 export default function App() {
   const [industry, setIndustry] = useState("");
-  const [greenScore, setGreenScore] = useState(null);
-  const [chartData, setChartData] = useState([
+  const [greenScore] = useState(null);
+  const [chartData] = useState([
     { factors: "emission", units: 0, fill: "#5EE03A" },
     { factors: "energy consumption", units: 0, fill: "#3AE08E" },
     { factors: "waste", units: 0, fill: "#3AE056" },
@@ -58,43 +58,82 @@ export default function App() {
   };
 
   const fetchGreenScore = async () => {
-    
     try {
+      const BASE_URL = "http://localhost:8000";
+  
+      // Add validation for empty industry
+      if (!industry.trim()) {
+        alert("Please enter an industry name");
+        return;
+      }
+  
       console.log(`Fetching green score for: ${industry}`);
-      const BASE_URL = "https://grefin-g61bfsk33-harshwardhans-projects-54b16b53.vercel.app";
-
-      const response = await axios.get(`${BASE_URL}/api/calculate_green_score/${encodeURIComponent(industry)}`);
-
-      console.log("API Response:", response.data);
+      
+      // Add request headers and error handling
+      const response = await axios.get(
+        `${BASE_URL}/calculate_green_score/${encodeURIComponent(industry)}`,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          validateStatus: function (status) {
+            return status >= 200 && status < 500;
+          }
+        }
+      );
+  
+      // Log full response for debugging
+      console.log("Full API Response:", response);
+      
+      if (!response.data) {
+        throw new Error('No data received from API');
+      }
   
       const data = response.data;
   
-      setGreenScore(data.green_score ? data.green_score.toFixed(2) : "0.00");
-      setChartData([
-        { factors: "emission", units: data.emission ? data.emission.toFixed(2) : "0.00", fill: "#5EE03A" },
-        {
-          factors: "energy consumption",
-          units: data.energy_consumption ? data.energy_consumption.toFixed(2) : "0.00",
-          fill: "#3AE08E",
-        },
-        { factors: "waste", units: data.waste ? data.waste.toFixed(2) : "0.00", fill: "#3AE056" },
-        {
-          factors: "community impact",
-          units: data.community_impact ? data.community_impact.toFixed(2) : "0.00",
-          fill: "#A3E03A",
-        },
-        { factors: "spend", units: data.spend ? data.spend.toFixed(2) : "0.00", fill: "#3AE0C7" },
-      ]);
+      // Validate data structure
+      if (typeof data.green_score === 'undefined') {
+        throw new Error('Invalid response format - missing green_score');
+      }
+  
+      console.log("Parsed Response Data:", {
+        green_score: data.green_score,
+        
+      });
+  
+     
+    
+  
     } catch (error) {
-      console.error("Error fetching green score:", error);
-      alert("Error fetching green score!");
+      // Enhanced error logging
+      console.error("Error details:", {
+        message: error.message,
+        response: error.response,
+        request: error.request
+      });
+      
+      if (error.response) {
+        // Server responded with error
+        alert(`Server error: ${error.response.status} - ${error.response.data.message || 'Unknown error'}`);
+      } else if (error.request) {
+        // Request made but no response
+        alert("No response received from server. Please check if the API is running.");
+      } else {
+        // Other errors
+        alert(`Error: ${error.message}`);
+      }
     }
   };
-  
-  
+
+  // Add a useEffect to monitor chartData and greenScore
+  useEffect(() => {
+    console.log("Updated Green Score:", greenScore);
+    console.log("Updated Chart Data:", chartData);
+  }, [greenScore, chartData]);
 
   return (
-    <Card className="flex flex-col">
+    <Card key={greenScore + JSON.stringify(chartData)} className="flex flex-col">
       <CardHeader className="items-center pb-0">
         <CardTitle className="text-2xl text-center text-green-500">
           Your Green Score Performance
@@ -122,6 +161,7 @@ export default function App() {
               <Label
                 content={({ viewBox }) => {
                   if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                    console.log(viewBox); // Log viewBox to ensure cx and cy are valid
                     return (
                       <text
                         x={viewBox.cx}
@@ -151,7 +191,7 @@ export default function App() {
             </Pie>
           </PieChart>
         </ChartContainer>
-        <CardDescription className="px-11">January - March 2024</CardDescription>
+        
       </CardContent>
       <div className="px-7 py-4">
         <input
