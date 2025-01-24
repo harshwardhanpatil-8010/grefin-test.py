@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { TrendingUp } from "lucide-react";
@@ -21,9 +20,9 @@ import { Separator } from "@radix-ui/react-dropdown-menu";
 import { Button } from "./components/ui/button";
 
 export default function App() {
-  const [industry, setIndustry] = useState("");
-  const [greenScore] = useState(null);
-  const [chartData] = useState([
+  const [industry, setIndustry] = useState(""); // User input for industry
+  const [greenScore, setGreenScore] = useState(0); // Default green score is 0
+  const [chartData, setChartData] = useState([
     { factors: "emission", units: 0, fill: "#5EE03A" },
     { factors: "energy consumption", units: 0, fill: "#3AE08E" },
     { factors: "waste", units: 0, fill: "#3AE056" },
@@ -31,109 +30,61 @@ export default function App() {
     { factors: "spend", units: 0, fill: "#3AE0C7" },
   ]);
 
-  const chartConfig = {
-    units: {
-      label: "Units",
-    },
-    emission: {
-      label: "Emission",
-      color: "#5EE03A",
-    },
-    energyConsumption: {
-      label: "Energy Consumption",
-      color: "#3AE08E",
-    },
-    waste: {
-      label: "Waste",
-      color: "#3AE056",
-    },
-    communityImpact: {
-      label: "Community Impact",
-      color: "#A3E03A",
-    },
-    spend: {
-      label: "Spend",
-      color: "#3AE0C7",
-    },
-  };
-
   const fetchGreenScore = async () => {
     try {
-      const BASE_URL = "http://localhost:8000";
-  
-      // Add validation for empty industry
+      const BASE_URL = "http://localhost:8000"; // Replace with the correct API URL
+
+      // Add validation for empty input
       if (!industry.trim()) {
-        alert("Please enter an industry name");
+        alert("Please enter a valid industry name.");
         return;
       }
-  
+
       console.log(`Fetching green score for: ${industry}`);
-      
-      // Add request headers and error handling
+
+      // Make the API request
       const response = await axios.get(
-        `${BASE_URL}/calculate_green_score/${encodeURIComponent(industry)}`,
-        {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          validateStatus: function (status) {
-            return status >= 200 && status < 500;
-          }
-        }
+        `${BASE_URL}/calculate_green_score/${encodeURIComponent(industry)}`
       );
-  
-      // Log full response for debugging
-      console.log("Full API Response:", response);
-      
-      if (!response.data) {
-        throw new Error('No data received from API');
-      }
-  
+
+      console.log("API Response:", response.data);
+
+      // Check if the response contains the green score
       const data = response.data;
-  
-      // Validate data structure
-      if (typeof data.green_score === 'undefined') {
-        throw new Error('Invalid response format - missing green_score');
+      if (!data || typeof data.green_score === "undefined") {
+        throw new Error("Invalid response: Missing green score");
       }
-  
-      console.log("Parsed Response Data:", {
-        green_score: data.green_score,
-        
-      });
-  
-     
-    
-  
+
+      // Update the green score and chart data
+      setGreenScore(Math.floor(data.green_score)); // Ensure integer value
+      setChartData([
+        { factors: "emission", units: data.emission || 0, fill: "#5EE03A" },
+        {
+          factors: "energy consumption",
+          units: data.energy_consumption || 0,
+          fill: "#3AE08E",
+        },
+        { factors: "waste", units: data.waste || 0, fill: "#3AE056" },
+        {
+          factors: "community impact",
+          units: data.community_impact || 0,
+          fill: "#A3E03A",
+        },
+        { factors: "spend", units: data.spend || 0, fill: "#3AE0C7" },
+      ]);
     } catch (error) {
-      // Enhanced error logging
-      console.error("Error details:", {
-        message: error.message,
-        response: error.response,
-        request: error.request
-      });
-      
-      if (error.response) {
-        // Server responded with error
-        alert(`Server error: ${error.response.status} - ${error.response.data.message || 'Unknown error'}`);
-      } else if (error.request) {
-        // Request made but no response
-        alert("No response received from server. Please check if the API is running.");
-      } else {
-        // Other errors
-        alert(`Error: ${error.message}`);
-      }
+      console.error("Error fetching green score:", error);
+      alert("Failed to fetch green score. Please try again.");
     }
   };
 
-  // Add a useEffect to monitor chartData and greenScore
   useEffect(() => {
-    console.log("Updated Green Score:", greenScore);
-    console.log("Updated Chart Data:", chartData);
+    console.log("Green Score Updated:", greenScore);
+    console.log("Chart Data Updated:", chartData);
   }, [greenScore, chartData]);
 
   return (
-    <Card key={greenScore + JSON.stringify(chartData)} className="flex flex-col">
+    <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
         <CardTitle className="text-2xl text-center text-green-500">
           Your Green Score Performance
@@ -141,8 +92,24 @@ export default function App() {
         <Separator className="bg-black" />
       </CardHeader>
       <CardContent className="flex-1 pb-0">
+        <div className="flex flex-col items-center justify-center">
+          {/* Green Score Display */}
+          <h2 className="text-green-500 text-4xl font-bold">{greenScore}</h2>
+          <p className="text-green-400 text-lg">Well Done!</p>
+        </div>
+
         <ChartContainer
-          config={chartConfig}
+          config={{
+            units: { label: "Units" },
+            emission: { label: "Emission", color: "#5EE03A" },
+            energyConsumption: {
+              label: "Energy Consumption",
+              color: "#3AE08E",
+            },
+            waste: { label: "Waste", color: "#3AE056" },
+            communityImpact: { label: "Community Impact", color: "#A3E03A" },
+            spend: { label: "Spend", color: "#3AE0C7" },
+          }}
           className="mx-auto aspect-square max-h-[250px]"
         >
           <PieChart>
@@ -156,12 +123,10 @@ export default function App() {
               nameKey="factors"
               innerRadius={50}
               strokeWidth={15}
-              className=""
             >
               <Label
                 content={({ viewBox }) => {
                   if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                    console.log(viewBox); // Log viewBox to ensure cx and cy are valid
                     return (
                       <text
                         x={viewBox.cx}
@@ -191,7 +156,6 @@ export default function App() {
             </Pie>
           </PieChart>
         </ChartContainer>
-        
       </CardContent>
       <div className="px-7 py-4">
         <input
